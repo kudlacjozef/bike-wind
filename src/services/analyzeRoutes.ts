@@ -116,7 +116,6 @@ export async function analyzeRoutes(
         routeName: route.name,
         direction,
         distanceKm: route.distanceKm,
-        durationMinutes: Math.round((route.distanceKm / averageSpeedKmh) * 60),
         segments,
         ...summary,
       })

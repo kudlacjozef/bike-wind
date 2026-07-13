@@ -46,7 +46,6 @@ export interface RouteAnalysis {
   routeName: string
   direction: RouteDirection
   distanceKm: number
-  durationMinutes: number
   averageHeadwindKmh: number
   averageTailwindKmh: number
   averageCrosswindKmh: number

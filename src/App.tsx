@@ -34,13 +34,6 @@ function departureLabel(timeMs: number): string {
     : { weekday: 'short', hour: '2-digit', minute: '2-digit' }).format(date)
 }
 
-function durationLabel(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`
-  const hours = Math.floor(minutes / 60)
-  const remainder = minutes % 60
-  return remainder ? `${hours}h ${remainder}m` : `${hours}h`
-}
-
 function directionLabel(direction: RouteAnalysis['direction']): string {
   return direction === 'forward' ? 'Normal direction' : 'Reverse direction'
 }
@@ -70,7 +63,7 @@ function ResultCard({ analysis, route, onOpen }: { analysis: RouteAnalysis; rout
         <div className="result-card__heading">
           <div>
             <strong>{displayName}</strong>
-            <p>{analysis.distanceKm.toFixed(1)} km · {durationLabel(analysis.durationMinutes)}</p>
+            <p>{analysis.distanceKm.toFixed(1)} km</p>
           </div>
         </div>
         <div className="result-card__facts">
