@@ -18,8 +18,7 @@ BikeWind is a Progressive Web App (PWA). It runs entirely in the browser: there 
 - Opens a detailed map colored by headwind, crosswind, and tailwind.
 - Separates overlapping out-and-back lines and marks the direction of travel.
 - Shows wind-flow arrows and distinguishes weak, noticeable, strong, and very strong riding wind.
-- Includes a separate current-wind map covering roughly 100 km around your location.
-- Reduces the number of visible regional arrows as you zoom, never below five. Existing arrows remain fixed and newly exposed areas fill as you move the map.
+- Includes a separate current-wind map covering displayed location.
 
 ## Using BikeWind
 
