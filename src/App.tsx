@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { RoutePreview, SegmentMap } from './components/RouteMap'
 import { WindAreaView } from './components/WindAreaMap'
-import { ElevationWindProfile } from './components/ElevationWindProfile'
+import { ElevationWindProfile, ElevationWindSparkline } from './components/ElevationWindProfile'
 import { parseGpx } from './domain/gpx'
-import { windEffect, windJourneySequence, type WindEffect } from './domain/mapRoute'
 import type { RouteAnalysis, StoredRoute } from './domain/types'
 import { analyzeRoutes } from './services/analyzeRoutes'
 import { deleteRoute, getRoutes, saveRoute, setFavorite } from './storage/routes'
@@ -50,40 +49,8 @@ function directionArrow(direction: RouteAnalysis['direction']): string {
   return direction === 'forward' ? '→' : '←'
 }
 
-function windEffectLabel(effect: WindEffect): string {
-  if (effect === 'headwind') return 'Head'
-  if (effect === 'tailwind') return 'Tail'
-  return 'Cross'
-}
-
-function WindJourneyBar({ analysis }: { analysis: RouteAnalysis }) {
-  const sequence = windJourneySequence(analysis.segments)
-  const sequenceLabel = sequence.map(windEffectLabel).join(' → ')
-  const startSegment = analysis.segments[0]
-  const finishSegment = analysis.segments.at(-1)
-  const startEffect = startSegment ? windEffect(startSegment) : 'crosswind'
-  const finishEffect = finishSegment ? windEffect(finishSegment) : 'crosswind'
-  return (
-    <div className="wind-journey" aria-label={`From start to finish: ${sequenceLabel}`}>
-      <div className="wind-journey__track">
-        {analysis.segments.map((segment, index) => (
-          <span
-            key={`${segment.arrivalTime}-${index}`}
-            className={`wind-journey__segment wind-journey__segment--${windEffect(segment)}`}
-            style={{ flexGrow: segment.distanceKm }}
-          />
-        ))}
-      </div>
-      <div className="wind-journey__axis">
-        <span><i className={`wind-endpoint wind-endpoint--${startEffect}`} />Start</span>
-        <i aria-hidden="true">→</i>
-        <span>Finish<i className={`wind-endpoint wind-endpoint--${finishEffect}`} /></span>
-      </div>
-    </div>
-  )
-}
-
 function ResultCard({ analysis, route, onOpen }: { analysis: RouteAnalysis; route: StoredRoute; onOpen: () => void }) {
+  const routePoints = analysis.direction === 'forward' ? route.points : [...route.points].reverse()
   return (
     <button
       className="result-card"
@@ -106,7 +73,7 @@ function ResultCard({ analysis, route, onOpen }: { analysis: RouteAnalysis; rout
           <span><b>{round(analysis.headwindPercent)}%</b> headwind</span>
           <span><b>{round(analysis.maxGustKmh)}</b> km/h gust</span>
         </div>
-        <WindJourneyBar analysis={analysis} />
+        <ElevationWindSparkline points={routePoints} segments={analysis.segments} />
       </div>
       <span className="chevron">›</span>
     </button>
