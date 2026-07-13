@@ -102,6 +102,13 @@ function AnalysisDetail({ analysis, route, onClose }: { analysis: RouteAnalysis;
           segments={analysis.segments}
           selectedPoint={selectedMapPoint}
         />
+        <div className="wind-strength-scale" aria-label="Wind strength for cycling">
+          <strong>Riding impact</strong>
+          <span><i className="wind-strength-dot wind-strength-dot--weak" />Weak</span>
+          <span><i className="wind-strength-dot wind-strength-dot--noticeable" />Noticeable</span>
+          <span><i className="wind-strength-dot wind-strength-dot--strong" />Strong</span>
+          <span><i className="wind-strength-dot wind-strength-dot--very-strong" />Very strong</span>
+        </div>
         <ElevationWindProfile
           points={routePoints}
           segments={analysis.segments}
@@ -115,43 +122,10 @@ function AnalysisDetail({ analysis, route, onClose }: { analysis: RouteAnalysis;
           <span><i className="direction-key">➤</i>Ride direction</span>
           <span><i className="wind-key">➤</i>Wind flow</span>
         </div>
-        <div className="wind-strength-scale" aria-label="Wind strength for cycling">
-          <strong>Riding impact</strong>
-          <span><i className="wind-strength-dot wind-strength-dot--weak" />Weak</span>
-          <span><i className="wind-strength-dot wind-strength-dot--noticeable" />Noticeable</span>
-          <span><i className="wind-strength-dot wind-strength-dot--strong" />Strong</span>
-          <span><i className="wind-strength-dot wind-strength-dot--very-strong" />Very strong</span>
-        </div>
-        <section className="detail-summary">
-          <div>
-            <span>Distance</span>
-            <strong>{analysis.distanceKm.toFixed(1)} km</strong>
-          </div>
-          <div>
-            <span>Ride time</span>
-            <strong>{durationLabel(analysis.durationMinutes)}</strong>
-          </div>
+        <section className="detail-summary detail-summary--single">
           <div>
             <span>Max gust</span>
             <strong>{round(analysis.maxGustKmh)} km/h</strong>
-          </div>
-        </section>
-        <section className="wind-metrics">
-          <h3>Wind along the ride</h3>
-          <div className="metric-row metric-row--tail">
-            <div><span className="metric-icon">↟</span><span>Tailwind</span></div>
-            <strong>{analysis.averageTailwindKmh.toFixed(1)} km/h avg</strong>
-            <em>{round(analysis.tailwindPercent)}% of route</em>
-          </div>
-          <div className="metric-row metric-row--cross">
-            <div><span className="metric-icon">↝</span><span>Crosswind</span></div>
-            <strong>{analysis.averageCrosswindKmh.toFixed(1)} km/h avg</strong>
-            <em>{round(analysis.crosswindPercent)}% neutral</em>
-          </div>
-          <div className="metric-row metric-row--head">
-            <div><span className="metric-icon">↡</span><span>Headwind</span></div>
-            <strong>{analysis.averageHeadwindKmh.toFixed(1)} km/h avg</strong>
-            <em>{round(analysis.headwindPercent)}% of route</em>
           </div>
         </section>
         <p className="fine-print">Forecast conditions are estimates at 10 m above ground. Local terrain, trees, and buildings can change the wind you feel.</p>
@@ -337,7 +311,6 @@ function App() {
               </span>
               <span className="wind-map-launch__copy">
                 <strong>Show wind map</strong>
-                <small>Blue arrows around you · 100 km radius</small>
               </span>
               <span className="chevron">›</span>
             </button>

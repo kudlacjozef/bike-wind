@@ -257,11 +257,7 @@ export function ElevationWindProfile({
   return (
     <section className="elevation-profile" aria-label="Elevation profile colored by wind effect">
       <div className="elevation-profile__heading">
-        <div>
-          <span className="eyebrow">RIDE PROFILE</span>
-          <h3>Elevation &amp; wind</h3>
-        </div>
-        <strong>{Math.round(profile.minElevationM)}–{Math.round(profile.maxElevationM)} m</strong>
+        <h3>Elevation &amp; wind</h3>
       </div>
       <div
         className={`elevation-profile__readout${selectedEffect ? ` elevation-profile__readout--${selectedEffect}` : ''}`}
@@ -276,7 +272,6 @@ export function ElevationWindProfile({
         ) : <span>Tap or slide across the profile to inspect the ride</span>}
       </div>
       <div className="elevation-profile__plot">
-        <span className="elevation-profile__y-title">Altitude (m)</span>
         <div className="elevation-profile__y-axis" aria-hidden="true">
           <span>{Math.round(chartMaxElevationM)}</span>
           <span>{Math.round(chartMiddleElevationM)}</span>
@@ -349,7 +344,6 @@ export function ElevationWindProfile({
         <span>{(profile.totalDistanceKm / 2).toFixed(1)} km</span>
         <span>{profile.totalDistanceKm.toFixed(1)} km</span>
       </div>
-      <p>Distance (km) · rising line = climbing · color = wind on that section</p>
     </section>
   )
 }

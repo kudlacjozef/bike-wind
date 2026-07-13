@@ -302,14 +302,7 @@ export function SegmentMap({ points, segments, selectedPoint }: SegmentMapProps)
         iconSize: [30, 30],
         iconAnchor: [15, 15],
       }),
-    })
-      .bindTooltip('Selected point', {
-        permanent: true,
-        direction: 'top',
-        offset: [0, -13],
-        className: 'profile-position-tooltip',
-      })
-      .addTo(map)
+    }).addTo(map)
   }, [selectedPoint, points, segments])
 
   return (
