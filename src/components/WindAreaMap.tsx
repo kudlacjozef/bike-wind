@@ -10,9 +10,11 @@ import {
 } from '../domain/wind'
 import {
   fetchWindArea,
+  nearestAreaWindSample,
   WIND_AREA_RADIUS_KM,
   type AreaWindSample,
 } from '../services/windArea'
+import { distanceKm } from '../domain/geo'
 
 function windMarkerSize(strength: CyclingWindStrength): number {
   if (strength === 'weak') return 20
@@ -82,7 +84,10 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
       fillOpacity: 1,
     }).bindTooltip('You are here', { direction: 'top' }).addTo(map)
 
-    for (const { point, weather } of samples) {
+    const overviewZoom = map.getZoom()
+    let windMarkers: L.Marker[] = []
+
+    const addWindMarker = ({ point, weather }: AreaWindSample): L.Marker => {
       const speed = Math.round(weather.speedKmh)
       const gust = Math.round(weather.gustKmh)
       const from = compassDirection(weather.directionFromDegrees)
@@ -113,11 +118,42 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
       details.textContent = `From ${from} · gusts ${gust} km/h`
       popup.append(heading, speedLine, details)
       marker.bindPopup(popup, { closeButton: false, offset: [0, -8] })
+      return marker
     }
 
-    const resizeFrame = window.requestAnimationFrame(() => map.invalidateSize())
+    const displaySamples = (): AreaWindSample[] => {
+      const zoomDifference = map.getZoom() - overviewZoom
+      if (zoomDifference <= 0) return samples
+
+      const markerSpacingPx = zoomDifference >= 3 ? 45 : zoomDifference >= 2 ? 55 : 70
+      const size = map.getSize()
+      const display: AreaWindSample[] = []
+      for (let y = markerSpacingPx / 2; y < size.y; y += markerSpacingPx) {
+        for (let x = markerSpacingPx / 2; x < size.x; x += markerSpacingPx) {
+          const latLng = map.containerPointToLatLng([x, y])
+          const point = { latitude: latLng.lat, longitude: latLng.lng }
+          if (distanceKm(center, point) > WIND_AREA_RADIUS_KM) continue
+          const nearest = nearestAreaWindSample(point, samples)
+          if (nearest) display.push({ point, weather: nearest.weather })
+        }
+      }
+      return display
+    }
+
+    const redrawWindMarkers = () => {
+      windMarkers.forEach((marker) => marker.removeFrom(map))
+      windMarkers = displaySamples().map(addWindMarker)
+    }
+    redrawWindMarkers()
+    map.on('moveend', redrawWindMarkers)
+
+    const resizeFrame = window.requestAnimationFrame(() => {
+      map.invalidateSize()
+      redrawWindMarkers()
+    })
     return () => {
       window.cancelAnimationFrame(resizeFrame)
+      map.off('moveend', redrawWindMarkers)
       map.remove()
     }
   }, [center, samples])
@@ -187,7 +223,7 @@ export function WindAreaView({ onClose }: { onClose: () => void }) {
             <WindMapCanvas center={center} samples={samples} />
             <div className="wind-area-caption">
               <strong>Arrows show where the air is moving</strong>
-              <span>Tap an arrow for speed and gusts</span>
+              <span>Zoom in for more arrows · tap for details</span>
             </div>
             <div className="wind-strength-scale wind-strength-scale--area" aria-label="Wind strength for cycling">
               <span><i className="wind-strength-dot wind-strength-dot--weak" />Weak</span>

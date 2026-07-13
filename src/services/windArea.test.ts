@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildWindAreaGrid } from './windArea'
+import { buildWindAreaGrid, nearestAreaWindSample } from './windArea'
 
 describe('buildWindAreaGrid', () => {
   it('creates an evenly distributed grid inside a 100 km radius', () => {
@@ -16,5 +16,18 @@ describe('buildWindAreaGrid', () => {
         * Math.cos((center.latitude * Math.PI) / 180)
       expect(Math.hypot(northKm, eastKm)).toBeLessThanOrEqual(100.01)
     }
+  })
+
+  it('uses the closest forecast point for additional display arrows', () => {
+    const west = {
+      point: { latitude: 48.1, longitude: 16.8 },
+      weather: { time: 1, speedKmh: 10, directionFromDegrees: 90, gustKmh: 15 },
+    }
+    const east = {
+      point: { latitude: 48.1, longitude: 17.4 },
+      weather: { time: 1, speedKmh: 20, directionFromDegrees: 270, gustKmh: 28 },
+    }
+
+    expect(nearestAreaWindSample({ latitude: 48.1, longitude: 17.32 }, [west, east])).toBe(east)
   })
 })

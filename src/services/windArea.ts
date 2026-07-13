@@ -1,4 +1,5 @@
 import type { GeoPoint, WeatherSample } from '../domain/types'
+import { distanceKm } from '../domain/geo'
 import { fetchWindSamples } from './openMeteo'
 
 export const WIND_AREA_RADIUS_KM = 100
@@ -7,6 +8,22 @@ const GRID_STEPS_FROM_CENTER = 3
 export interface AreaWindSample {
   point: GeoPoint
   weather: WeatherSample
+}
+
+export function nearestAreaWindSample(
+  point: GeoPoint,
+  samples: AreaWindSample[],
+): AreaWindSample | undefined {
+  let nearest: AreaWindSample | undefined
+  let nearestDistance = Number.POSITIVE_INFINITY
+  for (const sample of samples) {
+    const distance = distanceKm(point, sample.point)
+    if (distance < nearestDistance) {
+      nearest = sample
+      nearestDistance = distance
+    }
+  }
+  return nearest
 }
 
 export function buildWindAreaGrid(
