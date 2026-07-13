@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bearingDegrees, distanceKm, sampleRoute } from './geo'
+import { bearingDegrees, distanceKm, sameRouteGeometry, sampleRoute } from './geo'
 
 describe('route geometry', () => {
   it('calculates approximate distance between Bratislava coordinates', () => {
@@ -27,5 +27,14 @@ describe('route geometry', () => {
     expect(samples.length).toBeGreaterThan(2)
     expect(samples[0]?.distanceFromStartKm).toBe(0)
     expect(samples.at(-1)?.point.longitude).toBe(17.2)
+  })
+
+  it('recognizes the same imported route geometry', () => {
+    const points = [
+      { latitude: 48, longitude: 17 },
+      { latitude: 48.1, longitude: 17.1 },
+    ]
+    expect(sameRouteGeometry(points, points.map((point) => ({ ...point })))).toBe(true)
+    expect(sameRouteGeometry(points, [...points].reverse())).toBe(false)
   })
 })

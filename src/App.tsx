@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { RoutePreview, SegmentMap } from './components/RouteMap'
 import { WindAreaView } from './components/WindAreaMap'
 import { ElevationWindProfile, ElevationWindSparkline } from './components/ElevationWindProfile'
-import { parseGpx } from './domain/gpx'
+import { parseGpx, prepareImportedRoute } from './domain/gpx'
 import type { RouteAnalysis, StoredRoute } from './domain/types'
 import { analyzeRoutes } from './services/analyzeRoutes'
 import { deleteRoute, getRoutes, saveRoute, setFavorite } from './storage/routes'
@@ -200,24 +200,37 @@ function App() {
     if (!files?.length) return
     setError(null)
     let imported = 0
+    let updated = 0
+    const knownRoutes = await getRoutes()
     const failures: string[] = []
     for (const file of Array.from(files)) {
       try {
         const parsed = parseGpx(await file.text(), file.name)
-        await saveRoute({
-          ...parsed,
-          id: crypto.randomUUID(),
-          favorite: true,
-          importedAt: new Date().toISOString(),
-        })
-        imported += 1
+        const { route, existingIndex } = prepareImportedRoute(
+          parsed,
+          knownRoutes,
+          crypto.randomUUID(),
+          new Date().toISOString(),
+        )
+        await saveRoute(route)
+        if (existingIndex >= 0) {
+          knownRoutes[existingIndex] = route
+          updated += 1
+        } else {
+          knownRoutes.push(route)
+          imported += 1
+        }
       } catch (reason) {
         failures.push(`${file.name}: ${reason instanceof Error ? reason.message : 'Could not import.'}`)
       }
     }
     await reloadRoutes()
     setScreen('routes')
-    setImportMessage(imported ? `${imported} route${imported === 1 ? '' : 's'} added and marked as favorites.` : null)
+    const messages = [
+      imported ? `${imported} route${imported === 1 ? '' : 's'} added` : '',
+      updated ? `${updated} route${updated === 1 ? '' : 's'} updated with GPX filename${updated === 1 ? '' : 's'}` : '',
+    ].filter(Boolean)
+    setImportMessage(messages.length ? `${messages.join(' · ')}.` : null)
     if (failures.length) setError(failures.join(' '))
     if (fileInput.current) fileInput.current.value = ''
   }

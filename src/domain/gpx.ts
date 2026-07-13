@@ -1,5 +1,7 @@
-import { routeDistanceKm } from './geo'
+import { routeDistanceKm, sameRouteGeometry } from './geo'
 import type { GeoPoint, StoredRoute } from './types'
+
+export type ParsedGpxRoute = Omit<StoredRoute, 'id' | 'favorite' | 'importedAt'>
 
 function elementsByLocalName(root: Document, localName: string): Element[] {
   return Array.from(root.getElementsByTagName('*')).filter(
@@ -26,7 +28,7 @@ export function routeNameFromFileName(name: string): string {
   return name.replace(/\.gpx$/i, '').trim() || 'Untitled route'
 }
 
-export function parseGpx(xml: string, fileName: string): Omit<StoredRoute, 'id' | 'favorite' | 'importedAt'> {
+export function parseGpx(xml: string, fileName: string): ParsedGpxRoute {
   const document = new DOMParser().parseFromString(xml, 'application/xml')
   if (document.querySelector('parsererror')) throw new Error('This file is not valid GPX XML.')
 
@@ -40,5 +42,22 @@ export function parseGpx(xml: string, fileName: string): Omit<StoredRoute, 'id' 
     name: routeNameFromFileName(fileName),
     points,
     distanceKm: routeDistanceKm(points),
+  }
+}
+
+export function prepareImportedRoute(
+  parsed: ParsedGpxRoute,
+  existingRoutes: StoredRoute[],
+  newId: string,
+  importedAt: string,
+): { route: StoredRoute; existingIndex: number } {
+  const existingIndex = existingRoutes.findIndex((route) =>
+    sameRouteGeometry(route.points, parsed.points))
+  const existing = existingIndex >= 0 ? existingRoutes[existingIndex] : undefined
+  return {
+    existingIndex,
+    route: existing
+      ? { ...existing, ...parsed, importedAt }
+      : { ...parsed, id: newId, favorite: true, importedAt },
   }
 }

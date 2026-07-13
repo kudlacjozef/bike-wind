@@ -26,6 +26,16 @@ export function routeDistanceKm(points: GeoPoint[]): number {
   return total
 }
 
+export function sameRouteGeometry(a: GeoPoint[], b: GeoPoint[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((point, index) => {
+    const candidate = b[index]
+    return candidate !== undefined
+      && Math.abs(point.latitude - candidate.latitude) < 1e-7
+      && Math.abs(point.longitude - candidate.longitude) < 1e-7
+  })
+}
+
 export function bearingDegrees(a: GeoPoint, b: GeoPoint): number {
   const lat1 = radians(a.latitude)
   const lat2 = radians(b.latitude)
