@@ -1,10 +1,10 @@
 # BikeWind
 
-BikeWind is a personal, mobile-first web app for deciding which familiar bike route to ride based on the wind. Import your GPX tracks once, choose **Now** or a later departure, and BikeWind calculates every selected route in both directions.
+BikeWind is a personal web app for deciding which familiar bike route to ride based on the wind. Import your GPX tracks once, choose **Now** or a later departure, and BikeWind calculates every selected route in both directions.
 
 **Use the current version:** [kudlacjozef.github.io/bike-wind](https://kudlacjozef.github.io/bike-wind/)
 
-BikeWind is a Progressive Web App (PWA). It runs entirely in the browser: there is no account, paid Apple developer certificate, application server, or API key.
+BikeWind is a Progressive Web App (PWA). It runs entirely in the browser: there is no account, application server, or API key.
 
 ## Current features
 
