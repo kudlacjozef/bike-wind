@@ -49,13 +49,18 @@ function directionArrow(direction: RouteAnalysis['direction']): string {
   return direction === 'forward' ? '→' : '←'
 }
 
+function routeDirectionName(routeName: string, direction: RouteAnalysis['direction']): string {
+  return direction === 'forward' ? routeName : `${routeName} reverse`
+}
+
 function ResultCard({ analysis, route, onOpen }: { analysis: RouteAnalysis; route: StoredRoute; onOpen: () => void }) {
   const routePoints = analysis.direction === 'forward' ? route.points : [...route.points].reverse()
+  const displayName = routeDirectionName(analysis.routeName, analysis.direction)
   return (
     <button
       className="result-card"
       onClick={onOpen}
-      aria-label={`${analysis.routeName}, ${directionLabel(analysis.direction)}`}
+      aria-label={displayName}
     >
       <div className="result-card__route-icon">
         <RoutePreview points={route.points} />
@@ -64,7 +69,7 @@ function ResultCard({ analysis, route, onOpen }: { analysis: RouteAnalysis; rout
       <div className="result-card__body">
         <div className="result-card__heading">
           <div>
-            <strong>{directionLabel(analysis.direction)}</strong>
+            <strong>{displayName}</strong>
             <p>{analysis.distanceKm.toFixed(1)} km · {durationLabel(analysis.durationMinutes)}</p>
           </div>
         </div>
@@ -87,13 +92,14 @@ function AnalysisDetail({ analysis, route, onClose }: { analysis: RouteAnalysis;
   )
   const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null)
   const selectedMapPoint = selectedPointIndex === null ? undefined : routePoints[selectedPointIndex]
+  const displayName = routeDirectionName(analysis.routeName, analysis.direction)
   return (
-    <div className="detail" role="dialog" aria-modal="true" aria-label={`${analysis.routeName} wind details`}>
+    <div className="detail" role="dialog" aria-modal="true" aria-label={`${displayName} wind details`}>
       <header className="detail__header">
         <button className="icon-button" onClick={onClose} aria-label="Close details">×</button>
         <div>
           <p>{directionArrow(analysis.direction)} {directionLabel(analysis.direction)}</p>
-          <h2>{analysis.routeName}</h2>
+          <h2>{displayName}</h2>
         </div>
       </header>
       <div className="detail__content">

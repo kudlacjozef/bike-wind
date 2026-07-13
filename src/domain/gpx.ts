@@ -22,8 +22,8 @@ function pointFromElement(element: Element): GeoPoint | null {
   }
 }
 
-function fileNameWithoutExtension(name: string): string {
-  return name.replace(/\.gpx$/i, '').replace(/[_-]+/g, ' ').trim() || 'Untitled route'
+export function routeNameFromFileName(name: string): string {
+  return name.replace(/\.gpx$/i, '').trim() || 'Untitled route'
 }
 
 export function parseGpx(xml: string, fileName: string): Omit<StoredRoute, 'id' | 'favorite' | 'importedAt'> {
@@ -36,7 +36,9 @@ export function parseGpx(xml: string, fileName: string): Omit<StoredRoute, 'id' 
   const points = pointElements.map(pointFromElement).filter((point): point is GeoPoint => point !== null)
   if (points.length < 2) throw new Error('The GPX file needs at least two track or route points.')
 
-  const nameElement = elementsByLocalName(document, 'name')[0]
-  const name = nameElement?.textContent?.trim() || fileNameWithoutExtension(fileName)
-  return { name, points, distanceKm: routeDistanceKm(points) }
+  return {
+    name: routeNameFromFileName(fileName),
+    points,
+    distanceKm: routeDistanceKm(points),
+  }
 }
