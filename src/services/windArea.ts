@@ -10,6 +10,11 @@ export interface AreaWindSample {
   weather: WeatherSample
 }
 
+export function visibleWindTarget(zoomDifference: number, overviewCount = 29): number {
+  const safeDifference = Math.max(0, Math.floor(zoomDifference))
+  return Math.max(5, Math.round(overviewCount * (0.7 ** safeDifference)))
+}
+
 export function nearestAreaWindSample(
   point: GeoPoint,
   samples: AreaWindSample[],
@@ -58,8 +63,16 @@ export async function fetchWindArea(
   signal?: AbortSignal,
 ): Promise<AreaWindSample[]> {
   const points = buildWindAreaGrid(center)
+  return fetchWindForPoints(points, targetTimeMs, signal)
+}
+
+export async function fetchWindForPoints(
+  points: GeoPoint[],
+  targetTimeMs = Date.now(),
+  signal?: AbortSignal,
+): Promise<AreaWindSample[]> {
   const requests = points.map((point, index) => ({
-    key: `area-${index}`,
+    key: `wind-point-${index}`,
     point,
     targetTimeMs,
   }))

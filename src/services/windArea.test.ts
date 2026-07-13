@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildWindAreaGrid, nearestAreaWindSample } from './windArea'
+import { buildWindAreaGrid, nearestAreaWindSample, visibleWindTarget } from './windArea'
 
 describe('buildWindAreaGrid', () => {
   it('creates an evenly distributed grid inside a 100 km radius', () => {
@@ -29,5 +29,11 @@ describe('buildWindAreaGrid', () => {
     }
 
     expect(nearestAreaWindSample({ latitude: 48.1, longitude: 17.32 }, [west, east])).toBe(east)
+  })
+
+  it('shows fewer arrows as the map zooms but never drops below five', () => {
+    expect([0, 1, 2, 3, 4, 5, 8].map((zoom) => visibleWindTarget(zoom))).toEqual([
+      29, 20, 14, 10, 7, 5, 5,
+    ])
   })
 })
