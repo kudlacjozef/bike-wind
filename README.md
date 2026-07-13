@@ -14,7 +14,6 @@ BikeWind is a Progressive Web App (PWA). It runs entirely in the browser: there 
 - Uses a wind sample approximately every 1 km and the forecast for the estimated time you reach that section.
 - Starts with **Now** by default, with an optional departure time up to 7 days ahead.
 - Uses your usual average speed to estimate progress along the ride.
-- Lists every calculated route direction without ranking, scoring, or a “best route” label.
 - Shows tailwind and headwind percentages, maximum gust, and a start-to-finish color strip.
 - Opens a detailed map colored by headwind, crosswind, and tailwind.
 - Separates overlapping out-and-back lines and marks the direction of travel.
