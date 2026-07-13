@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { RoutePreview, SegmentMap } from './components/RouteMap'
 import { WindAreaView } from './components/WindAreaMap'
+import { ElevationWindProfile } from './components/ElevationWindProfile'
 import { parseGpx } from './domain/gpx'
 import { windEffect, windJourneySequence, type WindEffect } from './domain/mapRoute'
 import type { RouteAnalysis, StoredRoute } from './domain/types'
@@ -125,6 +126,7 @@ function AnalysisDetail({ analysis, route, onClose }: { analysis: RouteAnalysis;
       </header>
       <div className="detail__content">
         <SegmentMap points={routePoints} segments={analysis.segments} />
+        <ElevationWindProfile points={routePoints} segments={analysis.segments} />
         <div className="legend">
           <span><i className="dot dot--tail" />Tailwind</span>
           <span><i className="dot dot--cross" />Crosswind</span>

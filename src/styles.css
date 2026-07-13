@@ -200,6 +200,23 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .dot--tail { background: var(--green); }.dot--cross { background: var(--amber); }.dot--head { background: var(--red); }
 .direction-key { display: inline-block; margin-right: 4px; color: var(--ink); font-size: .72rem; font-style: normal; }
 .wind-key { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-right: 4px; color: #08799e; background: #dbf2f9; border-radius: 50%; font-size: .62rem; font-style: normal; }
+.elevation-profile { margin: 16px 0 12px; padding: 15px 15px 12px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); box-shadow: 0 7px 22px rgba(21,63,58,.045); }
+.elevation-profile__heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+.elevation-profile__heading h3, .elevation-profile--empty h3 { margin: 2px 0 0; font-family: ui-serif, Georgia, serif; font-size: 1.08rem; }
+.elevation-profile__heading strong { color: var(--muted); font-size: .72rem; white-space: nowrap; }
+.elevation-profile__chart { display: block; width: 100%; height: 142px; overflow: visible; }
+.elevation-profile__grid { stroke: #dfe3dc; stroke-width: 1; stroke-dasharray: 3 6; vector-effect: non-scaling-stroke; }
+.elevation-profile__area { fill: #edf0e9; opacity: .9; }
+.elevation-profile__line { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.elevation-profile__line--tailwind { stroke: var(--green); }
+.elevation-profile__line--crosswind { stroke: var(--amber); }
+.elevation-profile__line--headwind { stroke: var(--red); }
+.elevation-profile__axis { display: flex; justify-content: space-between; margin-top: 4px; color: var(--muted); font-size: .62rem; font-weight: 700; }
+.elevation-profile > p { margin: 8px 0 0; color: var(--muted); font-size: .64rem; text-align: center; }
+.elevation-profile--empty { min-height: 104px; display: grid; align-content: center; gap: 4px; }
+.elevation-profile--empty > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.elevation-profile--empty span { color: var(--muted); font-size: .7rem; font-weight: 700; }
+.elevation-profile--empty > p { text-align: left; line-height: 1.4; }
 .wind-strength-scale { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px 11px; margin: -7px 0 18px; color: var(--muted); font-size: .63rem; }
 .wind-strength-scale strong { color: var(--ink); font-size: .65rem; }
 .wind-strength-scale span { display: inline-flex; align-items: center; gap: 4px; }
