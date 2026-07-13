@@ -62,7 +62,9 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
     }).addTo(map)
 
     const centerLatLng = L.latLng(center.latitude, center.longitude)
-    const areaCircle = L.circle(centerLatLng, {
+    const areaBounds = centerLatLng.toBounds(WIND_AREA_RADIUS_KM * 2000)
+    map.fitBounds(areaBounds, { padding: [22, 22] })
+    L.circle(centerLatLng, {
       radius: WIND_AREA_RADIUS_KM * 1000,
       color: '#08799e',
       weight: 1.5,
@@ -71,7 +73,6 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
       fillOpacity: 0.07,
       interactive: false,
     }).addTo(map)
-    map.fitBounds(areaCircle.getBounds(), { padding: [22, 22] })
 
     L.circleMarker(centerLatLng, {
       radius: 7,
