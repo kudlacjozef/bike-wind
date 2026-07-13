@@ -10,8 +10,6 @@ BikeWind compares the wind along saved GPX cycling routes in both directions, he
 2. Select **Now** or a later start time, set your average speed, and compare.
 3. Open a result to inspect wind on the map and interactive elevation profile.
 
-Routes use their GPX filename. Reverse directions are labelled `<name> reverse`.
-
 ## Access
 
 BikeWind works in current browsers on iPhone, iPad, Android, Windows, macOS, Linux, and Chromebook.
