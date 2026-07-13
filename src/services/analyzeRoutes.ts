@@ -3,6 +3,7 @@ import type {
   GeoPoint,
   RouteAnalysis,
   RouteDirection,
+  RouteSample,
   SegmentWind,
   StoredRoute,
 } from '../domain/types'
@@ -30,11 +31,10 @@ interface AnalyzeRoutesOptions {
 function makePendingSegments(
   route: StoredRoute,
   direction: RouteDirection,
+  samples: RouteSample[],
   averageSpeedKmh: number,
   startTimeMs: number,
 ): PendingSegment[] {
-  const points = direction === 'forward' ? route.points : [...route.points].reverse()
-  const samples = sampleRoute(points, WEATHER_SAMPLE_INTERVAL_KM)
   const segments: PendingSegment[] = []
 
   for (let index = 1; index < samples.length; index += 1) {
@@ -65,10 +65,18 @@ export async function analyzeRoutes(
   if (routes.length === 0) return []
   const requestTimeMs = Date.now()
   const startTimeMs = options.startTimeMs ?? requestTimeMs
-  const pending = routes.flatMap((route) => [
-    ...makePendingSegments(route, 'forward', averageSpeedKmh, startTimeMs),
-    ...makePendingSegments(route, 'reverse', averageSpeedKmh, startTimeMs),
-  ])
+  const pending = routes.flatMap((route) => {
+    const forwardSamples = sampleRoute(route.points, WEATHER_SAMPLE_INTERVAL_KM)
+    const totalDistance = forwardSamples.at(-1)?.distanceFromStartKm ?? 0
+    const reverseSamples = [...forwardSamples].reverse().map((sample) => ({
+      point: sample.point,
+      distanceFromStartKm: totalDistance - sample.distanceFromStartKm,
+    }))
+    return [
+      ...makePendingSegments(route, 'forward', forwardSamples, averageSpeedKmh, startTimeMs),
+      ...makePendingSegments(route, 'reverse', reverseSamples, averageSpeedKmh, startTimeMs),
+    ]
+  })
   const longestDurationHours = Math.max(...routes.map((route) => route.distanceKm / averageSpeedKmh))
   const departureDelayHours = Math.max(0, (startTimeMs - requestTimeMs) / 3_600_000)
   const forecastHours = Math.max(
