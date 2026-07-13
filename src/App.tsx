@@ -81,7 +81,12 @@ function ResultCard({ analysis, route, onOpen }: { analysis: RouteAnalysis; rout
 }
 
 function AnalysisDetail({ analysis, route, onClose }: { analysis: RouteAnalysis; route: StoredRoute; onClose: () => void }) {
-  const routePoints = analysis.direction === 'forward' ? route.points : [...route.points].reverse()
+  const routePoints = useMemo(
+    () => (analysis.direction === 'forward' ? route.points : [...route.points].reverse()),
+    [analysis.direction, route.points],
+  )
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null)
+  const selectedMapPoint = selectedPointIndex === null ? undefined : routePoints[selectedPointIndex]
   return (
     <div className="detail" role="dialog" aria-modal="true" aria-label={`${analysis.routeName} wind details`}>
       <header className="detail__header">
@@ -92,8 +97,17 @@ function AnalysisDetail({ analysis, route, onClose }: { analysis: RouteAnalysis;
         </div>
       </header>
       <div className="detail__content">
-        <SegmentMap points={routePoints} segments={analysis.segments} />
-        <ElevationWindProfile points={routePoints} segments={analysis.segments} />
+        <SegmentMap
+          points={routePoints}
+          segments={analysis.segments}
+          selectedPoint={selectedMapPoint}
+        />
+        <ElevationWindProfile
+          points={routePoints}
+          segments={analysis.segments}
+          selectedPointIndex={selectedPointIndex}
+          onSelectedPointIndexChange={setSelectedPointIndex}
+        />
         <div className="legend">
           <span><i className="dot dot--tail" />Tailwind</span>
           <span><i className="dot dot--cross" />Crosswind</span>

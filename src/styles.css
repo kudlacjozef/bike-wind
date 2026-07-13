@@ -184,6 +184,11 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .route-map .leaflet-tooltip { color: var(--ink); font-size: .68rem; font-weight: 750; border: 0; border-radius: 7px; box-shadow: 0 3px 12px rgba(21,63,58,.14); }
 .route-direction-icon { background: transparent; border: 0; }
 .route-direction-icon span { width: 18px; height: 18px; display: grid; place-items: center; color: #153f3a; font-size: 14px; line-height: 1; text-shadow: -1px -1px 0 #fffef9, 1px -1px 0 #fffef9, -1px 1px 0 #fffef9, 1px 1px 0 #fffef9; transform-origin: center; }
+.profile-position-icon { background: transparent; border: 0; }
+.profile-position-icon span { width: 30px; height: 30px; display: grid; place-items: center; background: rgba(8,121,158,.18); border: 1px solid rgba(8,121,158,.32); border-radius: 50%; box-shadow: 0 2px 12px rgba(5,79,103,.4); }
+.profile-position-icon i { width: 13px; height: 13px; display: block; background: #08799e; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 1px 5px rgba(5,79,103,.45); }
+.route-map .leaflet-tooltip.profile-position-tooltip { padding: 4px 7px; color: #fff; background: #08799e; font-size: .58rem; font-weight: 800; box-shadow: 0 3px 10px rgba(5,79,103,.28); }
+.route-map .leaflet-tooltip-top.profile-position-tooltip::before { border-top-color: #08799e; }
 .wind-direction-icon { display: grid; place-items: center; border: 0; border-radius: 50%; box-shadow: 0 3px 10px rgba(13, 86, 111, .25); }
 .wind-direction-icon::after { content: ""; position: absolute; inset: 2px; border: 1.5px solid rgba(255, 255, 255, .95); border-radius: 50%; }
 .wind-direction-icon span { width: 100%; height: 100%; display: grid; place-items: center; font-size: 62%; line-height: 1; transform-origin: center; }

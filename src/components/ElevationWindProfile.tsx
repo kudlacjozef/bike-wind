@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   buildElevationProfile,
   closestElevationPointIndex,
@@ -193,13 +192,15 @@ export function ElevationWindSparkline({
 export function ElevationWindProfile({
   points,
   segments,
+  selectedPointIndex,
+  onSelectedPointIndexChange,
 }: {
   points: GeoPoint[]
   segments: SegmentWind[]
+  selectedPointIndex: number | null
+  onSelectedPointIndexChange: (pointIndex: number | null) => void
 }) {
-  const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null)
   const profile = buildElevationProfile(points)
-  useEffect(() => setSelectedPointIndex(null), [points, segments])
   if (!profile) {
     return (
       <section className="elevation-profile elevation-profile--empty" aria-label="Elevation and wind profile unavailable">
@@ -237,12 +238,12 @@ export function ElevationWindProfile({
 
   const selectDistance = (distanceKm: number) => {
     const pointIndex = closestElevationPointIndex(profile.points, distanceKm)
-    if (pointIndex >= 0) setSelectedPointIndex(pointIndex)
+    if (pointIndex >= 0) onSelectedPointIndexChange(pointIndex)
   }
 
   const moveSelection = (step: number) => {
     const current = selectedPointIndex ?? 0
-    setSelectedPointIndex(Math.max(0, Math.min(profile.points.length - 1, current + step)))
+    onSelectedPointIndexChange(Math.max(0, Math.min(profile.points.length - 1, current + step)))
   }
 
   return (

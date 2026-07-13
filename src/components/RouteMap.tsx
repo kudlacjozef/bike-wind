@@ -19,6 +19,7 @@ import {
 interface SegmentMapProps {
   points: GeoPoint[]
   segments: SegmentWind[]
+  selectedPoint?: GeoPoint
 }
 
 interface RoutePreviewProps {
@@ -114,8 +115,10 @@ function offsetAnchor(map: L.Map, anchor: DirectionAnchor, offsetPx: number): L.
   )
 }
 
-export function SegmentMap({ points, segments }: SegmentMapProps) {
+export function SegmentMap({ points, segments, selectedPoint }: SegmentMapProps) {
   const mapElement = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<L.Map | null>(null)
+  const selectedPointMarker = useRef<L.Marker | null>(null)
 
   useEffect(() => {
     const container = mapElement.current
@@ -126,6 +129,7 @@ export function SegmentMap({ points, segments }: SegmentMapProps) {
       attributionControl: true,
       preferCanvas: true,
     })
+    mapInstance.current = map
     L.control.zoom({ position: 'bottomright' }).addTo(map)
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -265,16 +269,57 @@ export function SegmentMap({ points, segments }: SegmentMapProps) {
     return () => {
       window.cancelAnimationFrame(resizeFrame)
       map.off('zoomend', redrawOffsetLayers)
+      selectedPointMarker.current = null
+      mapInstance.current = null
       map.remove()
     }
   }, [points, segments])
+
+  useEffect(() => {
+    const map = mapInstance.current
+    if (!map) return
+
+    if (!selectedPoint) {
+      selectedPointMarker.current?.removeFrom(map)
+      selectedPointMarker.current = null
+      return
+    }
+
+    const position = L.latLng(selectedPoint.latitude, selectedPoint.longitude)
+    if (selectedPointMarker.current) {
+      selectedPointMarker.current.setLatLng(position)
+      return
+    }
+
+    selectedPointMarker.current = L.marker(position, {
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 1200,
+      alt: 'Selected point from elevation profile',
+      icon: L.divIcon({
+        className: 'profile-position-icon',
+        html: '<span aria-hidden="true"><i></i></span>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      }),
+    })
+      .bindTooltip('Selected point', {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -13],
+        className: 'profile-position-tooltip',
+      })
+      .addTo(map)
+  }, [selectedPoint, points, segments])
 
   return (
     <div
       ref={mapElement}
       className="route-map route-map--large"
       role="region"
-      aria-label="Interactive map with the full GPX route colored by wind effect"
+      aria-label={selectedPoint
+        ? 'Interactive map with the selected elevation profile point marked in blue'
+        : 'Interactive map with the full GPX route colored by wind effect'}
     />
   )
 }
