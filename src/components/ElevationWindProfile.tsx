@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import {
   buildElevationProfile,
   closestElevationPointIndex,
@@ -200,6 +201,7 @@ export function ElevationWindProfile({
   selectedPointIndex: number | null
   onSelectedPointIndexChange: (pointIndex: number | null) => void
 }) {
+  const activePointer = useRef<number | null>(null)
   const profile = buildElevationProfile(points)
   if (!profile) {
     return (
@@ -246,6 +248,12 @@ export function ElevationWindProfile({
     onSelectedPointIndexChange(Math.max(0, Math.min(profile.points.length - 1, current + step)))
   }
 
+  const selectFromPointer = (clientX: number, chart: SVGSVGElement) => {
+    const bounds = chart.getBoundingClientRect()
+    const fraction = Math.max(0, Math.min(1, (clientX - bounds.left) / bounds.width))
+    selectDistance(fraction * profile.totalDistanceKm)
+  }
+
   return (
     <section className="elevation-profile" aria-label="Elevation profile colored by wind effect">
       <div className="elevation-profile__heading">
@@ -265,7 +273,7 @@ export function ElevationWindProfile({
             <span>{Math.round(selectedPoint.elevationM)} m altitude</span>
             <span><i />{selectedSegment.windSpeedKmh.toFixed(1)} km/h · {effectLabel(selectedEffect)}wind</span>
           </>
-        ) : <span>Tap the profile to inspect wind at any point</span>}
+        ) : <span>Tap or slide across the profile to inspect the ride</span>}
       </div>
       <div className="elevation-profile__plot">
         <span className="elevation-profile__y-title">Altitude (m)</span>
@@ -280,11 +288,26 @@ export function ElevationWindProfile({
           preserveAspectRatio="none"
           role="button"
           tabIndex={0}
-          aria-label="Interactive elevation profile. Tap or use arrow keys to inspect wind speed."
+          aria-label="Interactive elevation profile. Tap, slide, or use arrow keys to inspect wind speed."
           onPointerDown={(event) => {
-            const bounds = event.currentTarget.getBoundingClientRect()
-            const fraction = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width))
-            selectDistance(fraction * profile.totalDistanceKm)
+            activePointer.current = event.pointerId
+            event.currentTarget.setPointerCapture(event.pointerId)
+            selectFromPointer(event.clientX, event.currentTarget)
+          }}
+          onPointerMove={(event) => {
+            if (activePointer.current === event.pointerId) {
+              selectFromPointer(event.clientX, event.currentTarget)
+            }
+          }}
+          onPointerUp={(event) => {
+            if (activePointer.current !== event.pointerId) return
+            activePointer.current = null
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId)
+            }
+          }}
+          onPointerCancel={(event) => {
+            if (activePointer.current === event.pointerId) activePointer.current = null
           }}
           onKeyDown={(event) => {
             if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
