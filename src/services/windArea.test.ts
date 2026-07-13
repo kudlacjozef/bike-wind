@@ -32,8 +32,8 @@ describe('buildWindAreaGrid', () => {
   })
 
   it('shows fewer arrows as the map zooms but never drops below five', () => {
-    expect([0, 1, 2, 3, 4, 5, 8].map((zoom) => visibleWindTarget(zoom))).toEqual([
-      29, 20, 14, 10, 7, 5, 5,
+    expect([-2, 0, 1, 2, 3, 4, 5, 8].map((zoom) => visibleWindTarget(zoom))).toEqual([
+      29, 29, 20, 14, 10, 7, 5, 5,
     ])
   })
 })

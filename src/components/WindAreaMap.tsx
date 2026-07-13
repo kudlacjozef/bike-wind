@@ -94,6 +94,7 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
       marker: L.Marker
       point: GeoPoint
       weather: WeatherSample
+      minimumZoom: number
     }
 
     const knownSamples = [...samples]
@@ -133,6 +134,8 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
 
     const applyWeather = (marker: L.Marker, weather: WeatherSample) => {
       const presentation = markerPresentation(weather)
+      marker.options.title = `${presentation.strengthLabel} riding wind: ${presentation.speed} km/h from ${presentation.from}, gusts ${presentation.gust} km/h`
+      marker.options.alt = `${presentation.strengthLabel} riding wind, ${presentation.speed} km/h from ${presentation.from}`
       marker.setIcon(presentation.icon)
       marker.unbindPopup().bindPopup(presentation.popup, { closeButton: false, offset: [0, -8] })
       const element = marker.getElement()
@@ -140,7 +143,11 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
       element?.setAttribute('aria-label', `${presentation.strengthLabel} riding wind, ${presentation.speed} km/h from ${presentation.from}`)
     }
 
-    const addWindMarker = ({ point, weather }: AreaWindSample): WindMarkerEntry => {
+    const addWindMarker = (
+      { point, weather }: AreaWindSample,
+      minimumZoom: number,
+      showImmediately = false,
+    ): WindMarkerEntry => {
       const presentation = markerPresentation(weather)
       const marker = L.marker([point.latitude, point.longitude], {
         interactive: true,
@@ -149,21 +156,73 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
         title: `${presentation.strengthLabel} riding wind: ${presentation.speed} km/h from ${presentation.from}, gusts ${presentation.gust} km/h`,
         alt: `${presentation.strengthLabel} riding wind, ${presentation.speed} km/h from ${presentation.from}`,
         icon: presentation.icon,
-      }).addTo(map)
+      })
       marker.bindPopup(presentation.popup, { closeButton: false, offset: [0, -8] })
-      const entry = { marker, point, weather }
+      if (showImmediately) marker.addTo(map)
+      const entry = { marker, point, weather, minimumZoom }
       windMarkers.push(entry)
       return entry
     }
 
-    samples.forEach(addWindMarker)
+    samples.forEach((sample) => addWindMarker(sample, overviewZoom, true))
 
-    const addMissingArrows = () => {
-      const targetCount = visibleWindTarget(map.getZoom() - overviewZoom, samples.length)
+    const spreadEntries = (
+      candidates: WindMarkerEntry[],
+      targetCount: number,
+      preserved: WindMarkerEntry[] = [],
+    ): WindMarkerEntry[] => {
+      if (targetCount <= 0 || candidates.length === 0) return []
+      const size = map.getSize()
+      const selected = preserved.filter((entry) => candidates.includes(entry)).slice(0, targetCount)
+      const screenPoint = (entry: WindMarkerEntry) => {
+        const point = map.latLngToContainerPoint([entry.point.latitude, entry.point.longitude])
+        return { screenX: point.x, screenY: point.y }
+      }
+
+      if (selected.length === 0) {
+        const centerEntry = [...candidates].sort((a, b) => {
+          const aPoint = screenPoint(a)
+          const bPoint = screenPoint(b)
+          return Math.hypot(aPoint.screenX - size.x / 2, aPoint.screenY - size.y / 2)
+            - Math.hypot(bPoint.screenX - size.x / 2, bPoint.screenY - size.y / 2)
+        })[0]
+        if (centerEntry) selected.push(centerEntry)
+      }
+
+      while (selected.length < Math.min(targetCount, candidates.length)) {
+        const selectedPoints = selected.map(screenPoint)
+        let next: WindMarkerEntry | undefined
+        let greatestSeparation = -1
+        for (const candidate of candidates) {
+          if (selected.includes(candidate)) continue
+          const candidatePoint = screenPoint(candidate)
+          const separation = Math.min(...selectedPoints.map((chosen) =>
+            Math.hypot(
+              candidatePoint.screenX - chosen.screenX,
+              candidatePoint.screenY - chosen.screenY,
+            )))
+          if (separation > greatestSeparation) {
+            greatestSeparation = separation
+            next = candidate
+          }
+        }
+        if (!next) break
+        selected.push(next)
+      }
+      return selected
+    }
+
+    const refreshArrows = () => {
+      const currentZoom = map.getZoom()
+      const targetCount = visibleWindTarget(currentZoom - overviewZoom, samples.length)
       const bounds = map.getBounds()
-      const visibleMarkers = windMarkers.filter(({ point }) => bounds.contains([point.latitude, point.longitude]))
-      const missingCount = targetCount - visibleMarkers.length
-      if (missingCount <= 0) return
+      const eligibleMarkers = windMarkers.filter(({ point, minimumZoom }) =>
+        minimumZoom <= currentZoom && bounds.contains([point.latitude, point.longitude]))
+      const displayedEligibleMarkers = eligibleMarkers.filter(({ marker }) => map.hasLayer(marker))
+      const displayedMarkers = displayedEligibleMarkers.length > targetCount
+        ? spreadEntries(displayedEligibleMarkers, targetCount)
+        : spreadEntries(eligibleMarkers, targetCount, displayedEligibleMarkers)
+      const missingCount = targetCount - displayedMarkers.length
 
       const size = map.getSize()
       if (size.x <= 0 || size.y <= 0) return
@@ -186,18 +245,19 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
         }
       }
 
-      const occupied = visibleMarkers.map(({ point }) => {
+      const occupied = windMarkers.filter(({ point }) =>
+        bounds.contains([point.latitude, point.longitude])).map(({ point }) => {
         const screenPoint = map.latLngToContainerPoint([point.latitude, point.longitude])
         return { screenX: screenPoint.x, screenY: screenPoint.y }
       })
       const selected: typeof candidates = []
-      if (occupied.length === 0 && candidates.length > 0) {
+      if (missingCount > 0 && occupied.length === 0 && candidates.length > 0) {
         const centerCandidate = [...candidates].sort((a, b) =>
           Math.hypot(a.screenX - size.x / 2, a.screenY - size.y / 2)
           - Math.hypot(b.screenX - size.x / 2, b.screenY - size.y / 2))[0]
         if (centerCandidate) selected.push(centerCandidate)
       }
-      while (selected.length < missingCount) {
+      while (missingCount > 0 && selected.length < missingCount) {
         let next: (typeof candidates)[number] | undefined
         let greatestSeparation = -1
         for (const candidate of candidates) {
@@ -216,10 +276,20 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
         selected.push(next)
       }
 
-      const newEntries = selected.slice(0, missingCount).flatMap(({ point }) => {
+      const newEntries = selected.slice(0, Math.max(0, missingCount)).flatMap(({ point }) => {
         const nearest = nearestAreaWindSample(point, knownSamples)
-        return nearest ? [addWindMarker({ point, weather: nearest.weather })] : []
+        return nearest ? [addWindMarker({ point, weather: nearest.weather }, currentZoom)] : []
       })
+      const markersToShow = new Set([...displayedMarkers, ...newEntries])
+      windMarkers.forEach((entry) => {
+        const { marker } = entry
+        if (markersToShow.has(entry)) {
+          if (!map.hasLayer(marker)) marker.addTo(map)
+        } else if (map.hasLayer(marker)) {
+          marker.removeFrom(map)
+        }
+      })
+
       if (newEntries.length === 0) return
 
       void fetchWindForPoints(newEntries.map(({ point }) => point), forecastTime, controller.signal)
@@ -238,17 +308,17 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
           // Keep the immediate nearest-forecast arrows if refreshing a newly revealed area fails.
         })
     }
-    map.on('moveend', addMissingArrows)
+    map.on('moveend', refreshArrows)
 
     const resizeFrame = window.requestAnimationFrame(() => {
       map.invalidateSize()
-      addMissingArrows()
+      refreshArrows()
     })
     return () => {
       disposed = true
       controller.abort()
       window.cancelAnimationFrame(resizeFrame)
-      map.off('moveend', addMissingArrows)
+      map.off('moveend', refreshArrows)
       map.remove()
     }
   }, [center, samples])
@@ -318,7 +388,7 @@ export function WindAreaView({ onClose }: { onClose: () => void }) {
             <WindMapCanvas center={center} samples={samples} />
             <div className="wind-area-caption">
               <strong>Arrows show where the air is moving</strong>
-              <span>Fewer arrows when zoomed · new areas fill as you move</span>
+              <span>Density follows zoom · new areas fill as you move</span>
             </div>
             <div className="wind-strength-scale wind-strength-scale--area" aria-label="Wind strength for cycling">
               <span><i className="wind-strength-dot wind-strength-dot--weak" />Weak</span>
