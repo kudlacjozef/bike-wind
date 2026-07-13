@@ -314,7 +314,6 @@ function App() {
             <header className="topbar">
               <div>
                 <span className="eyebrow">BIKEWIND</span>
-                <h1>Where should I ride?</h1>
               </div>
               {routes.length > 0 && (
                 <span className={`now-badge ${departureMode === 'later' ? 'now-badge--later' : ''}`}>
