@@ -125,19 +125,53 @@ function WindMapCanvas({ center, samples }: { center: GeoPoint; samples: AreaWin
       const zoomDifference = map.getZoom() - overviewZoom
       if (zoomDifference <= 0) return samples
 
-      const markerSpacingPx = zoomDifference >= 3 ? 45 : zoomDifference >= 2 ? 55 : 70
       const size = map.getSize()
-      const display: AreaWindSample[] = []
-      for (let y = markerSpacingPx / 2; y < size.y; y += markerSpacingPx) {
-        for (let x = markerSpacingPx / 2; x < size.x; x += markerSpacingPx) {
+      const targetCount = samples.length
+      const candidateCount = targetCount * 3
+      const columns = Math.max(1, Math.ceil(Math.sqrt((candidateCount * size.x) / Math.max(size.y, 1))))
+      const rows = Math.ceil(candidateCount / columns)
+      const cellWidth = size.x / columns
+      const cellHeight = size.y / rows
+      const candidates: Array<AreaWindSample & { screenX: number; screenY: number }> = []
+      for (let row = 0; row < rows; row += 1) {
+        for (let column = 0; column < columns; column += 1) {
+          const x = (column + 0.5) * cellWidth
+          const y = (row + 0.5) * cellHeight
           const latLng = map.containerPointToLatLng([x, y])
           const point = { latitude: latLng.lat, longitude: latLng.lng }
           if (distanceKm(center, point) > WIND_AREA_RADIUS_KM) continue
           const nearest = nearestAreaWindSample(point, samples)
-          if (nearest) display.push({ point, weather: nearest.weather })
+          if (nearest) {
+            candidates.push({
+              point,
+              weather: nearest.weather,
+              screenX: x,
+              screenY: y,
+            })
+          }
         }
       }
-      return display
+      if (candidates.length <= targetCount) {
+        return candidates.map(({ point, weather }) => ({ point, weather }))
+      }
+
+      const selected = [candidates[0]!]
+      while (selected.length < targetCount) {
+        let next: (typeof candidates)[number] | undefined
+        let greatestSeparation = -1
+        for (const candidate of candidates) {
+          if (selected.includes(candidate)) continue
+          const separation = Math.min(...selected.map((chosen) =>
+            Math.hypot(candidate.screenX - chosen.screenX, candidate.screenY - chosen.screenY)))
+          if (separation > greatestSeparation) {
+            greatestSeparation = separation
+            next = candidate
+          }
+        }
+        if (!next) break
+        selected.push(next)
+      }
+      return selected.map(({ point, weather }) => ({ point, weather }))
     }
 
     const redrawWindMarkers = () => {
@@ -223,7 +257,7 @@ export function WindAreaView({ onClose }: { onClose: () => void }) {
             <WindMapCanvas center={center} samples={samples} />
             <div className="wind-area-caption">
               <strong>Arrows show where the air is moving</strong>
-              <span>Zoom in for more arrows · tap for details</span>
+              <span>29 arrows stay in view · tap for details</span>
             </div>
             <div className="wind-strength-scale wind-strength-scale--area" aria-label="Wind strength for cycling">
               <span><i className="wind-strength-dot wind-strength-dot--weak" />Weak</span>
