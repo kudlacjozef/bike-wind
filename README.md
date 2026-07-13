@@ -1,6 +1,6 @@
 # BikeWind
 
-A private, mobile-first PWA that calculates the wind on your usual GPX bike routes when you want to leave now. It lists every selected route in both directions without scoring or ranking them.
+A private, mobile-first PWA that calculates the wind on your usual GPX bike routes when you want to leave now. It lists every selected route in both directions without scoring or ranking them, and includes a live wind-direction map covering roughly 100 km around your current location.
 
 ## Run locally
 

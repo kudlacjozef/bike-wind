@@ -33,6 +33,15 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .now-badge--later i { background: var(--amber); box-shadow: 0 0 0 4px rgba(217, 154, 51, .14); }
 
 .control-card { background: var(--white); border: 1px solid rgba(21, 63, 58, .09); border-radius: 24px; padding: 5px 17px 17px; box-shadow: var(--shadow); }
+.wind-map-launch { width: 100%; min-height: 74px; margin: -7px 0 16px; padding: 10px 13px; display: grid; grid-template-columns: 52px minmax(0, 1fr) 16px; align-items: center; gap: 12px; border: 1px solid rgba(8,121,158,.17); border-radius: 20px; color: var(--ink); background: linear-gradient(115deg, rgba(224,243,248,.96), rgba(255,254,249,.96)); box-shadow: 0 8px 24px rgba(13,86,111,.08); text-align: left; cursor: pointer; }
+.wind-map-launch__icon { width: 52px; height: 52px; position: relative; display: block; border-radius: 15px; background: #b5e2ef; overflow: hidden; }
+.wind-map-launch__icon i { position: absolute; color: #08799e; font-size: 15px; font-style: normal; transform: rotate(-22deg); }
+.wind-map-launch__icon i:nth-child(1) { left: 8px; top: 9px; }
+.wind-map-launch__icon i:nth-child(2) { right: 7px; top: 18px; font-size: 18px; }
+.wind-map-launch__icon i:nth-child(3) { left: 12px; bottom: 5px; font-size: 12px; }
+.wind-map-launch__copy { min-width: 0; display: grid; gap: 4px; }
+.wind-map-launch__copy strong { font-size: .88rem; }
+.wind-map-launch__copy small { color: var(--muted); font-size: .68rem; }
 .control-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 17px 2px; border-bottom: 1px solid var(--line); }
 .control-row > div:first-child { display: grid; gap: 4px; }
 .control-row span { color: var(--muted); font-size: .78rem; }
@@ -151,6 +160,18 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .detail__content { padding: 18px 18px calc(32px + env(safe-area-inset-bottom)); }
 .route-map { background-color: #dfe7df; border: 1px solid rgba(21,63,58,.11); border-radius: 23px; overflow: hidden; box-shadow: 0 9px 26px rgba(21,63,58,.08); }
 .route-map--large { height: 42vh; min-height: 290px; }
+.wind-area-map { height: min(64vh, 610px); min-height: 410px; border-radius: 23px; }
+.wind-area-content { min-height: calc(100vh - 103px); }
+.wind-map-status { min-height: 56vh; padding: 40px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; }
+.wind-map-status strong { font-family: ui-serif, Georgia, serif; font-size: 1.25rem; }
+.wind-map-status p { max-width: 330px; margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.wind-map-status__icon { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 50%; color: #08799e; background: #dff2f7; font-size: 1.8rem; }
+.wind-map-status--error .primary-button { margin-top: 8px; }
+.spinner--dark { width: 28px; height: 28px; border-color: rgba(8,121,158,.2); border-top-color: #08799e; }
+.wind-area-caption { margin: 12px 3px 0; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.wind-area-caption strong { font-size: .75rem; }
+.wind-area-caption span { color: var(--muted); font-size: .63rem; text-align: right; }
+.wind-strength-scale--area { margin: 12px 0 8px; }
 .route-map .leaflet-control-attribution { font-size: 8px; background: rgba(255, 255, 255, .82); }
 .route-map .leaflet-control-attribution a { color: #315e56; }
 .route-map .leaflet-control-zoom { border: 0; box-shadow: 0 4px 15px rgba(21,63,58,.18); margin: 0 11px 11px 0; }

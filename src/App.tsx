@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { RoutePreview, SegmentMap } from './components/RouteMap'
+import { WindAreaView } from './components/WindAreaMap'
 import { parseGpx } from './domain/gpx'
 import { windEffect, windJourneySequence, type WindEffect } from './domain/mapRoute'
 import type { RouteAnalysis, StoredRoute } from './domain/types'
@@ -206,6 +207,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [selectedAnalysis, setSelectedAnalysis] = useState<RouteAnalysis | null>(null)
+  const [windAreaOpen, setWindAreaOpen] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
   const abortController = useRef<AbortController | null>(null)
 
@@ -345,6 +347,17 @@ function App() {
                 </span>
               )}
             </header>
+
+            <button className="wind-map-launch" onClick={() => setWindAreaOpen(true)}>
+              <span className="wind-map-launch__icon" aria-hidden="true">
+                <i>➤</i><i>➤</i><i>➤</i>
+              </span>
+              <span className="wind-map-launch__copy">
+                <strong>Show wind map</strong>
+                <small>Blue arrows around you · 100 km radius</small>
+              </span>
+              <span className="chevron">›</span>
+            </button>
 
             {error && <div className="alert" role="alert">{error}<button onClick={() => setError(null)}>×</button></div>}
             {!loadingRoutes && routes.length === 0 ? (
@@ -493,6 +506,7 @@ function App() {
           onClose={() => setSelectedAnalysis(null)}
         />
       )}
+      {windAreaOpen && <WindAreaView onClose={() => setWindAreaOpen(false)} />}
     </div>
   )
 }
