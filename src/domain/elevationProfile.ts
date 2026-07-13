@@ -1,5 +1,5 @@
 import { distanceKm } from './geo'
-import type { GeoPoint } from './types'
+import type { GeoPoint, SegmentWind } from './types'
 
 export interface ElevationProfilePoint {
   distanceKm: number
@@ -11,6 +11,38 @@ export interface ElevationProfile {
   minElevationM: number
   maxElevationM: number
   totalDistanceKm: number
+}
+
+export function closestElevationPointIndex(
+  points: ElevationProfilePoint[],
+  distanceKm: number,
+): number {
+  if (points.length === 0) return -1
+
+  let low = 0
+  let high = points.length - 1
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2)
+    if ((points[middle]?.distanceKm ?? 0) < distanceKm) low = middle + 1
+    else high = middle
+  }
+
+  if (low === 0) return 0
+  const previousDistance = points[low - 1]?.distanceKm ?? 0
+  const currentDistance = points[low]?.distanceKm ?? previousDistance
+  return distanceKm - previousDistance <= currentDistance - distanceKm ? low - 1 : low
+}
+
+export function windSegmentAtDistance(
+  segments: SegmentWind[],
+  distanceKm: number,
+): SegmentWind | undefined {
+  let boundaryKm = 0
+  for (const segment of segments) {
+    boundaryKm += segment.distanceKm
+    if (distanceKm <= boundaryKm) return segment
+  }
+  return segments.at(-1)
 }
 
 export function buildElevationProfile(points: GeoPoint[]): ElevationProfile | null {

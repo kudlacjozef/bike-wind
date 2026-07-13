@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildElevationProfile } from './elevationProfile'
+import {
+  buildElevationProfile,
+  closestElevationPointIndex,
+  windSegmentAtDistance,
+} from './elevationProfile'
+import type { SegmentWind } from './types'
 
 describe('buildElevationProfile', () => {
   it('keeps the elevation sequence in ride order', () => {
@@ -33,5 +38,39 @@ describe('buildElevationProfile', () => {
       { latitude: 48, longitude: 17 },
       { latitude: 48, longitude: 17.01, elevation: 100 },
     ])).toBeNull()
+  })
+})
+
+describe('elevation profile selection', () => {
+  it('finds the nearest profile point by distance', () => {
+    const points = [
+      { distanceKm: 0, elevationM: 100 },
+      { distanceKm: 2, elevationM: 140 },
+      { distanceKm: 5, elevationM: 180 },
+    ]
+
+    expect(closestElevationPointIndex(points, 0.2)).toBe(0)
+    expect(closestElevationPointIndex(points, 1.6)).toBe(1)
+    expect(closestElevationPointIndex(points, 4.7)).toBe(2)
+  })
+
+  it('returns the wind segment covering the selected distance', () => {
+    const segment = (distanceKm: number, windSpeedKmh: number): SegmentWind => ({
+      start: { latitude: 48, longitude: 17 },
+      end: { latitude: 48, longitude: 17.01 },
+      distanceKm,
+      bearingDegrees: 0,
+      windSpeedKmh,
+      windFromDegrees: 180,
+      gustKmh: windSpeedKmh + 5,
+      alongKmh: -windSpeedKmh,
+      crossKmh: 0,
+      arrivalTime: 0,
+    })
+    const segments = [segment(2, 10), segment(3, 20)]
+
+    expect(windSegmentAtDistance(segments, 1.5)?.windSpeedKmh).toBe(10)
+    expect(windSegmentAtDistance(segments, 2.5)?.windSpeedKmh).toBe(20)
+    expect(windSegmentAtDistance(segments, 9)?.windSpeedKmh).toBe(20)
   })
 })

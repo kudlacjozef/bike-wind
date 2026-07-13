@@ -1,4 +1,10 @@
-import { buildElevationProfile, type ElevationProfilePoint } from '../domain/elevationProfile'
+import { useEffect, useState } from 'react'
+import {
+  buildElevationProfile,
+  closestElevationPointIndex,
+  windSegmentAtDistance,
+  type ElevationProfilePoint,
+} from '../domain/elevationProfile'
 import {
   groupRouteByWind,
   windEffect,
@@ -42,11 +48,26 @@ function pointCoordinates(
   totalDistanceKm: number,
   chartMinElevationM: number,
   chartElevationSpanM: number,
-): string {
+): { x: number; y: number } {
   const x = totalDistanceKm > 0 ? (point.distanceKm / totalDistanceKm) * CHART_WIDTH : 0
   const y = CHART_TOP + (
     (chartMinElevationM + chartElevationSpanM - point.elevationM) / chartElevationSpanM
   ) * (CHART_HEIGHT - CHART_TOP - CHART_BOTTOM)
+  return { x, y }
+}
+
+function pointCoordinatesText(
+  point: ElevationProfilePoint,
+  totalDistanceKm: number,
+  chartMinElevationM: number,
+  chartElevationSpanM: number,
+): string {
+  const { x, y } = pointCoordinates(
+    point,
+    totalDistanceKm,
+    chartMinElevationM,
+    chartElevationSpanM,
+  )
   return `${x.toFixed(1)},${y.toFixed(1)}`
 }
 
@@ -176,7 +197,9 @@ export function ElevationWindProfile({
   points: GeoPoint[]
   segments: SegmentWind[]
 }) {
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null)
   const profile = buildElevationProfile(points)
+  useEffect(() => setSelectedPointIndex(null), [points, segments])
   if (!profile) {
     return (
       <section className="elevation-profile elevation-profile--empty" aria-label="Elevation and wind profile unavailable">
@@ -197,10 +220,30 @@ export function ElevationWindProfile({
   const areaLine = areaIndices.map((index) => {
     const point = profile.points[index]
     return point
-      ? pointCoordinates(point, profile.totalDistanceKm, chartMinElevationM, chartElevationSpanM)
+      ? pointCoordinatesText(point, profile.totalDistanceKm, chartMinElevationM, chartElevationSpanM)
       : ''
   }).filter(Boolean).join(' ')
   const areaPoints = `0,${CHART_HEIGHT} ${areaLine} ${CHART_WIDTH},${CHART_HEIGHT}`
+  const selectedPoint = selectedPointIndex === null ? undefined : profile.points[selectedPointIndex]
+  const selectedSegment = selectedPoint
+    ? windSegmentAtDistance(segments, selectedPoint.distanceKm)
+    : undefined
+  const selectedEffect = selectedSegment ? windEffect(selectedSegment) : undefined
+  const selectedCoordinates = selectedPoint
+    ? pointCoordinates(selectedPoint, profile.totalDistanceKm, chartMinElevationM, chartElevationSpanM)
+    : undefined
+  const chartMaxElevationM = chartMinElevationM + chartElevationSpanM
+  const chartMiddleElevationM = chartMinElevationM + chartElevationSpanM / 2
+
+  const selectDistance = (distanceKm: number) => {
+    const pointIndex = closestElevationPointIndex(profile.points, distanceKm)
+    if (pointIndex >= 0) setSelectedPointIndex(pointIndex)
+  }
+
+  const moveSelection = (step: number) => {
+    const current = selectedPointIndex ?? 0
+    setSelectedPointIndex(Math.max(0, Math.min(profile.points.length - 1, current + step)))
+  }
 
   return (
     <section className="elevation-profile" aria-label="Elevation profile colored by wind effect">
@@ -211,35 +254,78 @@ export function ElevationWindProfile({
         </div>
         <strong>{Math.round(profile.minElevationM)}–{Math.round(profile.maxElevationM)} m</strong>
       </div>
-      <svg
-        className="elevation-profile__chart"
-        viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-        preserveAspectRatio="none"
-        aria-hidden="true"
+      <div
+        className={`elevation-profile__readout${selectedEffect ? ` elevation-profile__readout--${selectedEffect}` : ''}`}
+        aria-live="polite"
       >
-        <line className="elevation-profile__grid" x1="0" y1="10" x2={CHART_WIDTH} y2="10" />
-        <line className="elevation-profile__grid" x1="0" y1={CHART_HEIGHT / 2} x2={CHART_WIDTH} y2={CHART_HEIGHT / 2} />
-        <line className="elevation-profile__grid" x1="0" y1={CHART_HEIGHT - CHART_BOTTOM} x2={CHART_WIDTH} y2={CHART_HEIGHT - CHART_BOTTOM} />
-        <polygon className="elevation-profile__area" points={areaPoints} />
-        {profileGroups.map((group, index) => {
-          const indices = sampleIndices(group.startIndex, group.endIndex, profile.points.length)
-          const linePoints = indices.map((pointIndex) => {
-            const point = profile.points[pointIndex]
-            return point
-              ? pointCoordinates(point, profile.totalDistanceKm, chartMinElevationM, chartElevationSpanM)
-              : ''
-          }).filter(Boolean).join(' ')
-          return (
-            <polyline
-              key={`${group.effect}-${group.startIndex}-${index}`}
-              className={`elevation-profile__line ${effectClass(group.effect)}`}
-              points={linePoints}
-            />
-          )
-        })}
-      </svg>
-      <div className="elevation-profile__axis"><span>Start</span><span>Finish</span></div>
-      <p>Rising line = climbing · color = wind on that section</p>
+        {selectedPoint && selectedSegment && selectedEffect ? (
+          <>
+            <strong>{selectedPoint.distanceKm.toFixed(1)} km</strong>
+            <span>{Math.round(selectedPoint.elevationM)} m altitude</span>
+            <span><i />{selectedSegment.windSpeedKmh.toFixed(1)} km/h · {effectLabel(selectedEffect)}wind</span>
+          </>
+        ) : <span>Tap the profile to inspect wind at any point</span>}
+      </div>
+      <div className="elevation-profile__plot">
+        <span className="elevation-profile__y-title">Altitude (m)</span>
+        <div className="elevation-profile__y-axis" aria-hidden="true">
+          <span>{Math.round(chartMaxElevationM)}</span>
+          <span>{Math.round(chartMiddleElevationM)}</span>
+          <span>{Math.round(chartMinElevationM)}</span>
+        </div>
+        <svg
+          className="elevation-profile__chart"
+          viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+          preserveAspectRatio="none"
+          role="button"
+          tabIndex={0}
+          aria-label="Interactive elevation profile. Tap or use arrow keys to inspect wind speed."
+          onPointerDown={(event) => {
+            const bounds = event.currentTarget.getBoundingClientRect()
+            const fraction = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width))
+            selectDistance(fraction * profile.totalDistanceKm)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+              event.preventDefault()
+              moveSelection(event.key === 'ArrowLeft' ? -1 : 1)
+            }
+          }}
+        >
+          <line className="elevation-profile__grid" x1="0" y1="10" x2={CHART_WIDTH} y2="10" />
+          <line className="elevation-profile__grid" x1="0" y1={CHART_HEIGHT / 2} x2={CHART_WIDTH} y2={CHART_HEIGHT / 2} />
+          <line className="elevation-profile__grid" x1="0" y1={CHART_HEIGHT - CHART_BOTTOM} x2={CHART_WIDTH} y2={CHART_HEIGHT - CHART_BOTTOM} />
+          <polygon className="elevation-profile__area" points={areaPoints} />
+          {profileGroups.map((group, index) => {
+            const indices = sampleIndices(group.startIndex, group.endIndex, profile.points.length)
+            const linePoints = indices.map((pointIndex) => {
+              const point = profile.points[pointIndex]
+              return point
+                ? pointCoordinatesText(point, profile.totalDistanceKm, chartMinElevationM, chartElevationSpanM)
+                : ''
+            }).filter(Boolean).join(' ')
+            return (
+              <polyline
+                key={`${group.effect}-${group.startIndex}-${index}`}
+                className={`elevation-profile__line ${effectClass(group.effect)}`}
+                points={linePoints}
+              />
+            )
+          })}
+          {selectedCoordinates && selectedEffect && (
+            <g className={`elevation-profile__selection elevation-profile__selection--${selectedEffect}`}>
+              <line x1={selectedCoordinates.x} y1={CHART_TOP} x2={selectedCoordinates.x} y2={CHART_HEIGHT - CHART_BOTTOM} />
+              <circle cx={selectedCoordinates.x} cy={selectedCoordinates.y} r="8" />
+            </g>
+          )}
+        </svg>
+      </div>
+      <div className="elevation-profile__x-axis" aria-hidden="true">
+        <span>0 km</span>
+        <span>{(profile.totalDistanceKm / 2).toFixed(1)} km</span>
+        <span>{profile.totalDistanceKm.toFixed(1)} km</span>
+      </div>
+      <p>Distance (km) · rising line = climbing · color = wind on that section</p>
     </section>
   )
 }

@@ -209,14 +209,30 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .elevation-profile__heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 .elevation-profile__heading h3, .elevation-profile--empty h3 { margin: 2px 0 0; font-family: ui-serif, Georgia, serif; font-size: 1.08rem; }
 .elevation-profile__heading strong { color: var(--muted); font-size: .72rem; white-space: nowrap; }
-.elevation-profile__chart { display: block; width: 100%; height: 142px; overflow: visible; }
+.elevation-profile__readout { min-height: 34px; margin: 0 0 8px 44px; padding: 7px 9px; display: flex; align-items: center; justify-content: center; gap: 6px 10px; flex-wrap: wrap; color: var(--muted); background: #f5f6f2; border-radius: 10px; font-size: .65rem; font-weight: 700; text-align: center; }
+.elevation-profile__readout strong { color: var(--ink); font-size: .72rem; }
+.elevation-profile__readout span { display: inline-flex; align-items: center; gap: 4px; }
+.elevation-profile__readout i { width: 7px; height: 7px; border-radius: 50%; }
+.elevation-profile__readout--tailwind i { background: var(--green); }
+.elevation-profile__readout--crosswind i { background: var(--amber); }
+.elevation-profile__readout--headwind i { background: var(--red); }
+.elevation-profile__plot { position: relative; padding-left: 44px; }
+.elevation-profile__chart { display: block; width: 100%; height: 142px; overflow: visible; cursor: crosshair; touch-action: manipulation; }
+.elevation-profile__chart:focus-visible { outline: 2px solid #08799e; outline-offset: 4px; border-radius: 4px; }
+.elevation-profile__y-title { position: absolute; left: 0; top: 14px; bottom: 14px; display: grid; place-items: center; color: var(--muted); font-size: .53rem; font-weight: 800; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+.elevation-profile__y-axis { position: absolute; left: 14px; top: 6px; bottom: 5px; width: 24px; display: flex; flex-direction: column; justify-content: space-between; align-items: end; color: var(--muted); font-size: .55rem; font-weight: 700; }
 .elevation-profile__grid { stroke: #dfe3dc; stroke-width: 1; stroke-dasharray: 3 6; vector-effect: non-scaling-stroke; }
 .elevation-profile__area { fill: #edf0e9; opacity: .9; }
 .elevation-profile__line { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .elevation-profile__line--tailwind { stroke: var(--green); }
 .elevation-profile__line--crosswind { stroke: var(--amber); }
 .elevation-profile__line--headwind { stroke: var(--red); }
-.elevation-profile__axis { display: flex; justify-content: space-between; margin-top: 4px; color: var(--muted); font-size: .62rem; font-weight: 700; }
+.elevation-profile__selection line { stroke: rgba(21,63,58,.5); stroke-width: 1.5; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.elevation-profile__selection circle { stroke: white; stroke-width: 4; vector-effect: non-scaling-stroke; }
+.elevation-profile__selection--tailwind circle { fill: var(--green); }
+.elevation-profile__selection--crosswind circle { fill: var(--amber); }
+.elevation-profile__selection--headwind circle { fill: var(--red); }
+.elevation-profile__x-axis { display: flex; justify-content: space-between; margin: 3px 0 0 44px; color: var(--muted); font-size: .58rem; font-weight: 700; }
 .elevation-profile > p { margin: 8px 0 0; color: var(--muted); font-size: .64rem; text-align: center; }
 .elevation-profile--empty { min-height: 104px; display: grid; align-content: center; gap: 4px; }
 .elevation-profile--empty > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
